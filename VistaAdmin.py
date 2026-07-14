@@ -2,6 +2,7 @@
 #  Permite: ver, agregar, modificar y eliminar productos
 #  Usa CustomTkinter igual que vista_cliente.py
 
+import sqlite3
 import customtkinter as ctk
 from tkinter import messagebox
 from ClaseProducto import Producto
@@ -26,7 +27,7 @@ class VentanaAdmin(ctk.CTkToplevel):
         self.resizable(False, False)
 
         self.productos = cargar_productos()
-        self.producto_seleccionado = None   
+        self.producto_seleccionado = None
 
         self.protocol("WM_DELETE_WINDOW", self._volver_a_inicio)
 
@@ -78,7 +79,8 @@ class VentanaAdmin(ctk.CTkToplevel):
         header = ctk.CTkFrame(panel, fg_color=COLOR_ACENTO2, corner_radius=6)
         header.pack(fill="x", padx=12, pady=(0, 4))
 
-        for texto, ancho in [("ID", 40), ("Nombre", 200), ("Categoría", 120), ("Precio", 80), ("Stock", 60)]:
+        for texto, ancho in [("ID", 35), ("Nombre", 170), ("Categoría", 100),
+                            ("Precio", 70), ("Stock", 50), ("Cód. Barras", 100)]:
             ctk.CTkLabel(
                 header, text=texto,
                 font=ctk.CTkFont("Courier New", 11, "bold"),
@@ -115,11 +117,12 @@ class VentanaAdmin(ctk.CTkToplevel):
         fila.pack(fill="x", pady=2)
 
         datos = [
-            (str(producto.id),        40),
-            (producto.nombre,         200),
-            (producto.categoria,      120),
-            (f"${producto.precio:.0f}", 80),
-            (str(producto.stock),     60),
+            (str(producto.id),                          35),
+            (producto.nombre,                            170),
+            (producto.categoria,                         100),
+            (f"${producto.precio:.0f}",                  70),
+            (str(producto.stock),                        50),
+            (producto.codigo_barras or "—",              100),
         ]
 
         for texto, ancho in datos:
@@ -167,7 +170,27 @@ class VentanaAdmin(ctk.CTkToplevel):
                 height=34, corner_radius=8
             )
             entry.pack(fill="x", padx=20)
-            setattr(self, attr, entry)  
+            setattr(self, attr, entry)
+
+        # ── Código de barras: campo aparte, con botón "Escanear" ──
+        ctk.CTkLabel(
+            panel, text="Código de barras:",
+            font=ctk.CTkFont("Courier New", 11),
+            anchor="w"
+        ).pack(fill="x", padx=20, pady=(6, 0))
+
+        frame_codigo = ctk.CTkFrame(panel, fg_color="transparent")
+        frame_codigo.pack(fill="x", padx=20)
+
+        self.entry_codigo_barras = ctk.CTkEntry(
+            frame_codigo,
+            font=ctk.CTkFont("Courier New", 12),
+            height=34, corner_radius=8,
+            placeholder_text="Opcional — escaneá o escribí"
+        )
+        self.entry_codigo_barras.pack(side="left", fill="x", expand=True)
+        # Enter dentro de este campo también guarda, como en el resto del form
+        self.entry_codigo_barras.bind("<Return>", lambda e: self._accion_guardar())
 
         self.lbl_estado = ctk.CTkLabel(
             panel, text="",
@@ -223,6 +246,8 @@ class VentanaAdmin(ctk.CTkToplevel):
         self.entry_categoria.insert(0, producto.categoria)
         self.entry_precio.insert(0, str(producto.precio))
         self.entry_stock.insert(0, str(producto.stock))
+        if producto.codigo_barras:
+            self.entry_codigo_barras.insert(0, producto.codigo_barras)
 
     def _accion_guardar(self):
         """Guarda un producto nuevo o aplica los cambios al existente."""
@@ -230,6 +255,7 @@ class VentanaAdmin(ctk.CTkToplevel):
         categoria = self.entry_categoria.get().strip()
         precio_str = self.entry_precio.get().strip()
         stock_str  = self.entry_stock.get().strip()
+        codigo_barras = self.entry_codigo_barras.get().strip() or None
 
         if not nombre or not categoria or not precio_str or not stock_str:
             self.lbl_estado.configure(text="Completá todos los campos.", text_color=COLOR_ADVERTENCIA)
@@ -244,19 +270,43 @@ class VentanaAdmin(ctk.CTkToplevel):
             self.lbl_estado.configure(text="⚠ Precio y stock deben ser números válidos.", text_color=COLOR_ACENTO)
             return
 
+        # Chequeo de duplicados en memoria ANTES de tocar la base, para
+        # dar un mensaje claro en vez de que explote con un error de SQL.
+        if codigo_barras:
+            for p in self.productos:
+                mismo_producto = self.producto_seleccionado and p.id == self.producto_seleccionado.id
+                if p.codigo_barras == codigo_barras and not mismo_producto:
+                    self.lbl_estado.configure(
+                        text=f"⚠ Ese código de barras ya lo tiene '{p.nombre}'.",
+                        text_color=COLOR_ACENTO
+                    )
+                    return
+
         if self.producto_seleccionado:
             p = self.producto_seleccionado
-            p.nombre    = nombre
-            p.categoria = categoria
-            p.precio    = precio
-            p.stock     = stock
-            guardar_productos(self.productos)
+            p_backup = (p.nombre, p.categoria, p.precio, p.stock, p.codigo_barras)
+            p.nombre        = nombre
+            p.categoria     = categoria
+            p.precio        = precio
+            p.stock         = stock
+            p.codigo_barras = codigo_barras
+            try:
+                guardar_productos(self.productos)
+            except sqlite3.IntegrityError:
+                (p.nombre, p.categoria, p.precio, p.stock, p.codigo_barras) = p_backup
+                self.lbl_estado.configure(text="⚠ Ese código de barras ya está en uso.", text_color=COLOR_ACENTO)
+                return
             self.lbl_estado.configure(text=f"'{nombre}' actualizado.", text_color=COLOR_EXITO)
         else:
             nuevo_id = proximo_id(self.productos)
-            nuevo = Producto(nuevo_id, nombre, precio, categoria, stock)
+            nuevo = Producto(nuevo_id, nombre, precio, categoria, stock, codigo_barras)
             self.productos.append(nuevo)
-            guardar_productos(self.productos)
+            try:
+                guardar_productos(self.productos)
+            except sqlite3.IntegrityError:
+                self.productos.remove(nuevo)
+                self.lbl_estado.configure(text="⚠ Ese código de barras ya está en uso.", text_color=COLOR_ACENTO)
+                return
             self.lbl_estado.configure(text=f"'{nombre}' agregado.", text_color=COLOR_EXITO)
 
         self._limpiar_formulario()
@@ -294,7 +344,8 @@ class VentanaAdmin(ctk.CTkToplevel):
 
     def _limpiar_campos(self):
         """Vacía los campos del formulario."""
-        for entry in [self.entry_nombre, self.entry_categoria, self.entry_precio, self.entry_stock]:
+        for entry in [self.entry_nombre, self.entry_categoria, self.entry_precio,
+                    self.entry_stock, self.entry_codigo_barras]:
             entry.delete(0, "end")
 
     def _volver_a_inicio(self):
@@ -309,8 +360,6 @@ class VentanaAdmin(ctk.CTkToplevel):
 
 
 if __name__ == "__main__":
-    # CTkToplevel necesita una raíz Tk ya existente (mismo motivo que en
-    # VistaCliente.py). Creamos una raíz oculta explícita para testear solo.
     _raiz_oculta = ctk.CTk()
     _raiz_oculta.withdraw()
     app = VentanaAdmin(ventana_inicio=_raiz_oculta)

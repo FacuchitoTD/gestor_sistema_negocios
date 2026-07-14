@@ -1,15 +1,12 @@
-# =============================================================
-#  modelos.py — Lógica central del kiosco
 #  Contiene: Producto, Carrito, Venta
-# =============================================================
-
 class Producto:
-    def __init__(self, id, nombre, precio, categoria, stock):
-        self.id = id                  
-        self.nombre = nombre         
-        self.precio = float(precio)   
-        self.categoria = categoria    
-        self.stock = int(stock)       
+    def __init__(self, id, nombre, precio, categoria, stock, codigo_barras=None):
+        self.id = id
+        self.nombre = nombre
+        self.precio = float(precio)
+        self.categoria = categoria
+        self.stock = int(stock)
+        self.codigo_barras = codigo_barras
 
     def hay_stock(self):
         """Devuelve True si hay al menos 1 unidad disponible."""
@@ -41,7 +38,7 @@ class ItemCarrito:
 
 class Carrito:
     def __init__(self):
-        self.items = []   # Lista de objetos ItemCarrito
+        self.items = []  
 
     def agregar(self, producto: Producto, cantidad: int = 1):
         """
@@ -52,7 +49,6 @@ class Carrito:
             if item.producto.id == producto.id:
                 item.cantidad += cantidad
                 return
-        # Si no estaba en el carrito, lo agrega como nuevo ítem
         self.items.append(ItemCarrito(producto, cantidad))
 
     def quitar(self, producto_id: int):
@@ -104,26 +100,3 @@ class Venta:
         lineas.append(f"VUELTO:  ${self.vuelto:.2f}")
         lineas.append("=" * 30)
         return "\n".join(lineas)
-
-
-if __name__ == "__main__":
-    # Crear productos de prueba
-    p1 = Producto(1, "Coca Cola", 500, "Bebidas", 10)
-    p2 = Producto(2, "Alfajor", 350, "Golosinas", 5)
-
-    print("--- Productos ---")
-    print(p1)
-    print(p2)
-
-    # Simular una compra
-    carrito = Carrito()
-    carrito.agregar(p1, 2)
-    carrito.agregar(p2, 1)
-
-    print("\n--- Carrito ---")
-    print(carrito)
-
-    # Registrar la venta
-    venta = Venta(carrito.items, carrito.total(), pago=2000)
-    print("\n--- Ticket ---")
-    print(venta.ticket())

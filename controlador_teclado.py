@@ -10,18 +10,24 @@ def registrar_atajos_cliente(vista):
     un botón puntual, se avisa por consola pero el resto de los
     atajos se registra igual (no todo o nada).
     """
+    # 1. Atajos dinámicos para las categorías (F1, F2, F3...)
+    #    F4 y F12 quedan RESERVADAS para el carrito (vaciar / pagar),
+    #    así que las categorías nunca se las pisan.
     try:
-        MAX_TECLAS_F = 9
+        RESERVADAS = {4, 12}
+        teclas_disponibles = [n for n in range(1, 10) if n not in RESERVADAS]
+
         for i, (cat, btn) in enumerate(vista.botones_cat.items()):
-            if i >= MAX_TECLAS_F:
-                print(f"Categoría '{cat}' sin atajo: se acabaron las teclas F1-F{MAX_TECLAS_F}.")
+            if i >= len(teclas_disponibles):
+                print(f"Categoría '{cat}' sin atajo: se acabaron las teclas F disponibles.")
                 break
-            tecla_f = f"<F{i + 1}>"
+            tecla_f = f"<F{teclas_disponibles[i]}>"
             vista.bind(tecla_f, lambda event, b=btn: b.invoke())
-        print("Atajos de categorías (F1-F9) cargados.")
+        print("Atajos de categorías cargados.")
     except AttributeError as e:
         print(f"No se pudieron cargar los atajos de categorías: {e}")
 
+    # 2. Atajos del panel lateral (Carrito)
     try:
         vista.bind("<Delete>", lambda event: vista.btn_quitar.invoke())
         vista.bind("<F12>", lambda event: vista.btn_pagar.invoke())
@@ -44,6 +50,7 @@ def registrar_atajos_cobro(ventana_cobro, funcion_confirmar):
     except Exception as e:
         print(f"No se pudieron cargar los atajos de la ventana de cobro: {e}")
 
+
 def registrar_atajos_admin(vista):
     """
     Recibe la instancia de VentanaAdmin y le vincula sus atajos de teclado
@@ -56,7 +63,7 @@ def registrar_atajos_admin(vista):
         vista.bind("<Control-Delete>", lambda event: vista.btn_eliminar.invoke() if vista.btn_eliminar.cget("state") == "normal" else None)
 
         vista.bind("<Escape>", lambda event: vista._limpiar_formulario())
-        
+
         def forzar_foco_nombre():
             vista.entry_nombre.focus_set()
             return "break"
