@@ -1,0 +1,116 @@
+{
+    "productos": [
+        {
+            "id": 1,
+            "nombre": "Coca Cola 500ml",
+            "precio": 1500.0,
+            "categoria": "Bebidas",
+            "stock": 16
+        },
+        {
+            "id": 2,
+            "nombre": "Agua Mineral 500ml",
+            "precio": 500.0,
+            "categoria": "Bebidas",
+            "stock": 14
+        },
+        {
+            "id": 3,
+            "nombre": "Sprite 500ml",
+            "precio": 1300.0,
+            "categoria": "Bebidas",
+            "stock": 12
+        },
+        {
+            "id": 4,
+            "nombre": "Alfajor Triple",
+            "precio": 1000.0,
+            "categoria": "Golosinas",
+            "stock": 29
+        },
+        {
+            "id": 5,
+            "nombre": "Chicles",
+            "precio": 800.0,
+            "categoria": "Golosinas",
+            "stock": 46
+        },
+        {
+            "id": 6,
+            "nombre": "Caramelos",
+            "precio": 120.0,
+            "categoria": "Golosinas",
+            "stock": 25
+        },
+        {
+            "id": 7,
+            "nombre": "Papas Fritas 100g",
+            "precio": 750.0,
+            "categoria": "Snacks",
+            "stock": 24
+        },
+        {
+            "id": 8,
+            "nombre": "Maní con Chocolate",
+            "precio": 1000.0,
+            "categoria": "Snacks",
+            "stock": 17
+        },
+        {
+            "id": 9,
+            "nombre": "Oblea",
+            "precio": 1550.0,
+            "categoria": "Snacks",
+            "stock": 34
+        },
+        {
+            "id": 10,
+            "nombre": "Diario",
+            "precio": 350.0,
+            "categoria": "Varios",
+            "stock": 10
+        },
+        {
+            "id": 11,
+            "nombre": "Encendedor",
+            "precio": 1200.0,
+            "categoria": "Varios",
+            "stock": 8
+        },
+        {
+            "id": 12,
+            "nombre": "Pilas AA x2",
+            "precio": 3000.0,
+            "categoria": "Varios",
+            "stock": 10
+        },
+        {
+            "id": 13,
+            "nombre": "Papel Higienico 50m",
+            "precio": 4000.0,
+            "categoria": "Varios",
+            "stock": 9
+        },
+        {
+            "id": 14,
+            "nombre": "Galletitas",
+            "precio": 2000.0,
+            "categoria": "Snacks",
+            "stock": 20
+        },
+        {
+            "id": 15,
+            "nombre": "Yerba 1kg",
+            "precio": 6000.0,
+            "categoria": "Varios",
+            "stock": 10
+        },
+        {
+            "id": 16,
+            "nombre": "Auriculares a cable",
+            "precio": 2500.0,
+            "categoria": "Varios",
+            "stock": 1
+        }
+    ]
+}
